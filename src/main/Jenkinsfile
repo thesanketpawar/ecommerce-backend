@@ -1,0 +1,86 @@
+pipeline {
+  agent any
+
+  environment {
+    DOCKERHUB_CREDENTIALS = credentials("dockerhub-creds")
+    IMAGE_NAME = "thesanketpawar/ecommerce-backend"
+    IMAGE_TAG = "${env.BUILD_NUMBER}"
+    DEPLOY_HOST = "10.0.10.130"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch 'main'
+            url: 'https://github.com/thesanketpawar/ecommerce-backend.git',
+            credentialsId: 'github-creds'
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'mvn clean package -DskipTests'
+      }
+    }
+
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('SonarQube') {
+          sh 'mvn sonar:sonar'
+        }
+      }
+    }
+
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 2, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+
+    stage('Docker Build') {
+      steps {
+        sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+      }
+    }
+    
+    stage('Docker Push') {
+      steps {
+        sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+        sh "docker push ${IMAGE_NAME}:${IAMGE_TAG}"
+        sh "docker push ${IMAGE_NAME}:latest"
+      }
+    }
+    
+    stage('Deploy To App Server') {
+      steps {
+        sshagent(credentials: ['app-server-ssh-key']) {
+          sh """
+            ssh -o StrictHostKeyChecking=no -J ubuntu@34.232.51.82 ubuntu@${DEPLOY_HOST} '
+              docker pull ${IMAGE_NAME}:latest &&
+              docker stop ecommerce-app || true &&
+              docker rm ecommerce-app || true &&
+              docker run -d --name ecommerce-app -p 8080:8080 \
+              -e DB_HOST=ecommerce-db.cmrm6oggi5qh.us-east-1.rds.amazonaws.com \
+              -e DB_NAME=ecommercdb \
+              -e DB_USERNAME=postgres \
+              -e DB_PASSWORD=Sanket123 \
+              -e JWT_SECRET=2587fab11a62726114c4c6dfb6dbe76241729ec0e2755f1a2e01ab7d9262d93e \
+              ${IMAGE_NAME}:latest
+              '
+              """
+        }
+      }
+    }
+  }
+  post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs above.'
+        }
+    }
+}
+}
