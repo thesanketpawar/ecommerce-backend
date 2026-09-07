@@ -1,6 +1,9 @@
 pipeline {
     agent any
 
+    tools {
+        jdk 'JDK17'
+    }
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         DB_PASSWORD = credentials('db-password')
