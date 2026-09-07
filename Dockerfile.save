@@ -1,0 +1,15 @@
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-17 
+WORKDIR
+COPY
+RUN
+COPY
+RUN
+
+
+#Stage 2: Run
+FROM
+WORKDIR
+COPY
+EXPOSE
+ENTRYPOINT
