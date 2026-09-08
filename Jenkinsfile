@@ -61,7 +61,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['app-server-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no -J ubuntu@34.232.51.82 ubuntu@${DEPLOY_HOST} '
+                        ssh -o StrictHostKeyChecking=no -J ubuntu@44.223.96.87 ubuntu@${DEPLOY_HOST} '
                             docker pull ${IMAGE_NAME}:latest &&
                             docker stop ecommerce-app || true &&
                             docker rm ecommerce-app || true &&
