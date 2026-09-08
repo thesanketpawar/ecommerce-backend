@@ -57,6 +57,16 @@ pipeline {
             }
         }
 
+        stage('SSH Debug') {
+            steps {
+                sshagent(['app-server-ssh-key']) { 
+                    sh '''
+                    ssh -vvv -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -J ubuntu@44.223.96.87 ubuntu@10.0.10.130 "hostname"
+                    '''
+                }
+            }
+        }
+        
         stage('Deploy to App Server') {
             steps {
                 sshagent(credentials: ['app-server-ssh-key']) {
