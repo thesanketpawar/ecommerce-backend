@@ -56,20 +56,6 @@ pipeline {
                 sh "docker push ${IMAGE_NAME}:latest"
             }
         }
-
-        stage('SSH Debug') {
-            steps {
-                sshagent(['app-server-ssh-key']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no \
-                    -o UserKnownHostsFile=/dev/null \
-                    -o ProxyJump="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
-                    ubuntu@44.223.96.87 \
-                    "echo BASTION-SSH-OK"
-                    '''
-                }
-            }
-        }
         
         stage('Deploy to App Server') {
             steps {
