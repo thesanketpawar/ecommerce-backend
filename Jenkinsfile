@@ -61,10 +61,12 @@ pipeline {
             steps {
                 sshagent(credentials: ['app-server-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -J ubuntu@44.223.96.87 ubuntu@10.0.10.130 '
+                        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                            -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ubuntu@44.223.96.87" \
+                            ubuntu@10.0.10.130 '
                             docker pull ${IMAGE_NAME}:latest &&
-                            docker stop ecommerce-app || true &&
-                            docker rm ecommerce-app || true &&
+                            (docker stop ecommerce-app || true) &&
+                            (docker rm ecommerce-app || true) &&
                             docker run -d --name ecommerce-app -p 8080:8080 \
                                 -e DB_HOST=ecommerce-db.cmrm6oggi5qh.us-east-1.rds.amazonaws.com \
                                 -e DB_NAME=ecommerdb \
