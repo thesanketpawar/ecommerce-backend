@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
+        JAVA_HOME = "/usr/lib/jvm/java-21-openjdk-amd64"
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         DB_PASSWORD = credentials('db-password')
