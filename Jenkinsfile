@@ -59,9 +59,13 @@ pipeline {
 
         stage('SSH Debug') {
             steps {
-                sshagent(['app-server-ssh-key']) { 
+                sshagent(['app-server-ssh-key']) {
                     sh '''
-                    ssh -vvv -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -J ubuntu@44.223.96.87 ubuntu@10.0.10.130 "hostname"
+                    ssh -o StrictHostKeyChecking=no \
+                    -o UserKnownHostsFile=/dev/null \
+                    -o ProxyJump="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+                    ubuntu@44.223.96.87 \
+                    "echo BASTION-SSH-OK"
                     '''
                 }
             }
