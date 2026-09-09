@@ -56,27 +56,14 @@ pipeline {
                 sh "docker push ${IMAGE_NAME}:latest"
             }
         }
-        
-        stage('Deploy to App Server') {
+                stage('Deploy to ASG') {
             steps {
-                sshagent(credentials: ['app-server-ssh-key']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                            -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ubuntu@44.223.96.87" \
-                            ubuntu@10.0.10.130 '
-                            docker pull ${IMAGE_NAME}:latest &&
-                            (docker stop ecommerce-app || true) &&
-                            (docker rm ecommerce-app || true) &&
-                            docker run -d --name ecommerce-app -p 8080:8080 \
-                                -e DB_HOST=ecommerce-db.cmrm6oggi5qh.us-east-1.rds.amazonaws.com \
-                                -e DB_NAME=ecommerdb \
-                                -e DB_USERNAME=postgres \
-                                -e DB_PASSWORD=${DB_PASSWORD} \
-                                -e JWT_SECRET=${JWT_SECRET} \
-                                ${IMAGE_NAME}:latest
-                        '
-                    """
-                }
+                sh """
+                    aws autoscaling start-instance-refresh \
+                        --auto-scaling-group-name ecommerce-app-asg \
+                        --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 90}' \
+                        --region us-east-1
+                """
             }
         }
     }
